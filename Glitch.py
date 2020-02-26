@@ -25,22 +25,23 @@ def glitch(image_path, distort_amount):
     out_pixels = np.array(image)
 
     max_distort = min(20, distort_amount)
-    # number_of_shifts = random.randint(1, max_distort)
-    # print("number of shifts {0}".format(number_of_shifts))
-    # for i in range(0,number_of_shifts):
-    #     distance = random.randint(1,int(x_size*0.75))
-    #     y_pos = random.randint(1,y_size)
-    #     right = random.randint(0,1) == 0
-    #     offset_pixels_horizontal(right, distance, y_pos)
-    offset_pixels_horizontal(True, 100, 204)
+    number_of_shifts = random.randint(1, max_distort)
+    print("number of shifts {0}".format(number_of_shifts))
+
+    for i in range(0,number_of_shifts):
+        distance = random.randint(1,int(x_size*0.75))
+        y_pos = random.randint(1,y_size)
+        direction = random.randint(0,1) == 0
+        # offset_pixels_horizontal(shift_rgb_layers(in_pixels), direction, distance, y_pos)
+        offset_pixels_horizontal(in_pixels, direction, distance, y_pos)
+    # offset_pixels_horizontal(True, 100, 204)
     out_image = Image.fromarray(out_pixels, image.mode)
     out_image.show()
 
 
-def offset_pixels_horizontal(right, shift_distace, y_pos):
+def offset_pixels_horizontal(pixel_matrix, right, shift_distace, y_pos):
     global out_pixels
-    global in_pixels
-    Y_HEIGHT_DIVIDER = 3
+    Y_HEIGHT_DIVIDER = 5
     y_start_pos = random.randint(0, y_size)
     y_height = random.randint(1, y_size / Y_HEIGHT_DIVIDER)
     y_stop_pos = y_start_pos + y_height
@@ -50,41 +51,50 @@ def offset_pixels_horizontal(right, shift_distace, y_pos):
 
     pixel_square = None
     wraped_square = None
-    shift_rgb_layers()
+    # shift_rgb_layers()
     if right:
-        pixel_square = in_pixels[y_start_pos : y_stop_pos, :x_stop_pos]
-        wraped_square = in_pixels[y_start_pos : y_stop_pos, x_stop_pos:]
+        pixel_square = pixel_matrix[y_start_pos : y_stop_pos, :x_stop_pos]
+        wraped_square = pixel_matrix[y_start_pos : y_stop_pos, x_stop_pos:]
         
         out_pixels[y_start_pos : y_stop_pos, x_start_pos:] = pixel_square
         out_pixels[y_start_pos : y_stop_pos, :x_start_pos] = wraped_square
     else:
-        pixel_square = in_pixels[y_start_pos : y_stop_pos, x_start_pos:]
-        wraped_square = in_pixels[y_start_pos : y_stop_pos, :x_start_pos]
+        pixel_square = pixel_matrix[y_start_pos : y_stop_pos, x_start_pos:]
+        wraped_square = pixel_matrix[y_start_pos : y_stop_pos, :x_start_pos]
 
         out_pixels[y_start_pos : y_stop_pos, :x_stop_pos] = pixel_square
         out_pixels[y_start_pos : y_stop_pos, x_stop_pos:] = wraped_square
 
-def shift_rgb_layers():
-    global in_pixels
+def shift_rgb_layers(pixel_matrix):
+    y_size = len(pixel_matrix[:,1])
+    x_size = len(pixel_matrix[1,:])
+    # layer = get_rgb_layer()
 
-    layer = get_rgb_layer()
+    # y_shift = random.randint(1, 150)
+    # x_shift = random.randint(1, 150)
 
-    y_shift = random.randint(1, 150)
-    x_shift = random.randint(1, 150)
+    # y_start = y_shift
+    # y_stop = y_start + y_size
+    # x_start = x_shift
+    # x_stop = x_size - x_start
 
-    y_start = y_shift
-    y_stop = y_start + y_size
-    x_start = x_shift
-    x_stop = x_size - x_start
+    rgb_layer = get_rgb_layer()
+    print("layer {0}".format(rgb_layer))
+    r,g,b = np.dsplit(pixel_matrix,pixel_matrix.shape[-1])
+    if rgb_layer == 0:
+        g = np.empty([y_size,x_size,1], dtype=np.uint8)
+        b = np.empty([y_size,x_size,1], dtype=np.uint8)
+    elif rgb_layer == 1:
+        r = np.empty([y_size,x_size,1], dtype=np.uint8)
+        b = np.empty([y_size,x_size,1], dtype=np.uint8)
+    elif rgb_layer == 2:
+        r = np.empty([y_size,x_size,1], dtype=np.uint8)
+        g = np.empty([y_size,x_size,1], dtype=np.uint8)
 
-
-    b,g,r = np.dsplit(in_pixels,in_pixels.shape[-1])
-    r = np.empty([y_size,x_size,1], dtype=np.uint8)
-    g = np.empty([y_size,x_size,1], dtype=np.uint8)
-    np.matmul(b, 0,75)
-    im = np.dstack((b,g,r))
+    im = np.dstack((r,g,b))
     print(im)
-    Image.fromarray(im).show()
+
+    return im
 
 def get_rgb_layer():
     return random.randint(0,3)
